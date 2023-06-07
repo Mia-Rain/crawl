@@ -1,0 +1,29 @@
+#!/bin/sh
+# shellcheck disable=SC1090,SC1091,SC2166
+init() {
+  while read -r p || [ "$p" ]; do
+    case "$p" in
+      (*'_EOF'*) break; return 0 ;;
+      (*) printf '%s\n' "$p" ;;
+    esac
+  done < ./fifo | socat STDIO TCP-LISTEN:"${PORT:-5557}",reuseaddr 
+}
+handle() {
+  printf 'HTTP/1.1 302 Found
+Server: %s
+Location: https://%s/%s
+Vary: Accept-Encoding
+Content-Length: 296
+Content-Type: text/html; charset=UTF-8
+_EOF' "${server:-crawl}" "$host" "$redirect" > ./fifo
+  while read -r p || [ "$p" ]; do
+    printf '%s\n' "$p"
+  done
+  # stream must be closed first
+}
+mkfifo ./fifo
+[ -e /etc/crawl.conf ] && . /etc/crawl.conf
+[ -e "${CRAWL_CONF:-./crawl.conf}" ] && . "${CRAWL_CONF:-./crawl.conf}"
+[ "$handle" ] || handle='handle'
+[ "$handle" -o "$host" -a "$redirect" ] || exit 1
+init | ${handle} 

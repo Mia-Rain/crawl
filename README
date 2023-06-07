@@ -1,5 +1,52 @@
 ---
 crawl
--- a microscopic server backend in just sh, nc & mkfifo
+-- a microscopic server backend in just sh, socat & mkfifo
 ---- webdevs run so we can crawl
+---
+Install
+-- clone this repo
+---- or
+-- download & run ./crawl
+---
+Usage
+-- ./crawl
+---- takes no arguments
+-- Variables:
+---- $CRAWL_CONF
+  >> set to location of crawl.conf
+  >>>> all variables other than $CRAWL_CONF
+  >>>> should be set within it
+  >> defaults:
+  >>> /etc/crawl.conf then ./crawl.conf
+---- $port
+  >> port nc will listen on
+  >> default: 5557
+---- $FIFO
+  >> set to location of fifo
+  >> default: ./fifo
+---- $handle
+  >> used instead of internal handle()
+  >>>> if $handle is used client stream remains opens
+  >>>> this results in endless loading and eventually
+  >>>> timeout, pass a response to $FIFO ASAP
+  >>>> client stream is passed via pipe
+  >>>> to STDIN of $handle
+  >>>> STDIN will not close until stream is ended
+  >>>> read STDIN line by line or make use of handle()
+  >>>>>> when $handle is not used, client is sent
+  >>>>>> a 302 redirect and the stream is closed
+  >>>>>> and client stream data is sent to STDOUT
+  >> default: handle()
+---- $host
+  >> domain
+  >> used by internal handle()
+  >> no default
+---- $redirect
+  >> redirect path
+  >> used by internal handle()
+  >> no default
+---- $server
+  >> replaces server header
+  >>>> please mention crawl in $server
+  >> default: crawl
 ---
